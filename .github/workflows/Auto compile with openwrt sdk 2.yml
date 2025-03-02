@@ -19,7 +19,7 @@ on:
 env:
   TZ: Asia/Makassar
   passwall2: ${{ github.repository }}
-  packages: esaaprillia/openwrt-passwall-packages
+  packages: predators46/openwrt-passwall-packages
 
 jobs:
   job_check:
