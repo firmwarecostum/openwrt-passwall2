@@ -122,7 +122,7 @@ jobs:
           cd sdk
           echo "make package/luci-app-passwall2/{clean,compile} -j$(nproc)"
           make package/luci-app-passwall2/{clean,compile} -j$(nproc)
-          mv bin/packages/x86_64/passwall2/ ../
+          mv bin/packages/*/passwall2/ ../
           rm .config .config.old
           cd ..
           echo "status=success" >> $GITHUB_OUTPUT
