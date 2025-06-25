@@ -135,7 +135,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           tag_name: ${{needs.job_check.outputs.passwall2_version}}
-          files: ${{ env.FIRMWARE }}/passwall2/*.ipk
+          files: ${{ env.FIRMWARE }}/passwall2/*.apk
 
 
   job_auto_compile:
