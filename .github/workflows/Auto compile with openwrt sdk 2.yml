@@ -14,8 +14,6 @@ on:
   push:
     branches:
       - 'main'
-    paths:
-      - ''
 env:
   TZ: Asia/Makassar
   passwall2: ${{ github.repository }}
@@ -301,3 +299,4 @@ jobs:
           tag_name: ${{needs.job_check.outputs.passwall2_version}}
           body_path: ${{ env.FIRMWARE }}/release.txt
           files: ${{ env.FIRMWARE }}/upload/*
+
