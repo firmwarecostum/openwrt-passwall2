@@ -8,6 +8,8 @@ if not arg[1] or not m:get(arg[1]) then
 	luci.http.redirect(api.url("acl"))
 end
 
+m:append(Template(appname .. "/cbi/nodes_listvalue_com"))
+
 local sys = api.sys
 
 local port_validate = function(self, value, t)
@@ -198,8 +200,12 @@ local NODE = m:get("@global[0]", "node")
 o = s:option(ListValue, "node", "<a style='color: red'>" .. translate("Node") .. "</a>")
 if GLOBAL_ENABLED == "1" and NODE then
 	o:value("", translate("Use global config") .. "(" .. api.get_node_name(NODE) .. ")")
+	o.group = {""}
+else
+	o.group = {}
 end
 o:depends({ _hide_node_option = "1",  ['!reverse'] = true })
+o.template = appname .. "/cbi/nodes_listvalue"
 
 o = s:option(DummyValue, "_hide_dns_option", "")
 o.template = "passwall2/cbi/hidevalue"
@@ -232,7 +238,7 @@ o:value("1:65535", translate("All"))
 o.validate = port_validate
 o:depends({ _hide_node_option = "1",  ['!reverse'] = true })
 
-o = s:option(DummyValue, "tips", " ")
+o = s:option(DummyValue, "tips", "　")
 o.rawhtml = true
 o.cfgvalue = function(t, n)
 	return string.format('<font color="red">%s</font>',
@@ -306,9 +312,6 @@ o:depends("remote_dns_protocol", "udp")
 o = s:option(Flag, "remote_fakedns", "FakeDNS", translate("Use FakeDNS work in the domain that proxy."))
 o.default = "0"
 o.rmempty = false
-o:depends("remote_dns_protocol", "tcp")
-o:depends("remote_dns_protocol", "doh")
-o:depends("remote_dns_protocol", "udp")
 
 o = s:option(ListValue, "remote_dns_query_strategy", translate("Remote Query Strategy"))
 o.default = "UseIPv4"
@@ -333,10 +336,19 @@ o.remove = function(self, section)
 	end
 end
 
+local o_node = s.fields["node"]
+
 for k, v in pairs(nodes_table) do
-	s.fields["node"]:value(v.id, v["remark"])
+	o_node:value(v.id, v["remark"])
+	o_node.group[#o_node.group+1] = (v.group and v.group ~= "") and v.group or translate("default")
 	if v.type == "Xray" then
 		s.fields["_xray_node"]:depends({ node = v.id })
+	end
+	if v.node_type == "normal" or v.protocol == "_balancing" or v.protocol == "_urltest" then
+		--Shunt node has its own separate options.
+		s.fields["remote_fakedns"]:depends({ node = v.id, remote_dns_protocol = "tcp" })
+		s.fields["remote_fakedns"]:depends({ node = v.id, remote_dns_protocol = "doh" })
+		s.fields["remote_fakedns"]:depends({ node = v.id, remote_dns_protocol = "udp" })
 	end
 end
 

@@ -9,10 +9,11 @@ if not arg[1] or not m:get(arg[1]) then
 	luci.http.redirect(m.redirect)
 end
 
-m.render = function(self, ...)
-	Map.render(self, ...)
-	api.optimize_cbi_ui()
+function m.on_before_save(self)
+	self:del(arg[1], "md5")
 end
+
+m:append(Template(appname .. "/cbi/nodes_listvalue_com"))
 
 local has_ss = api.is_finded("ss-redir")
 local has_ss_rust = api.is_finded("sslocal")
@@ -24,6 +25,7 @@ local trojan_type = {}
 local vmess_type = {}
 local vless_type = {}
 local hysteria2_type = {}
+local xray_version = api.get_app_version("xray")
 if has_ss then
 	local s = "shadowsocks-libev"
 	table.insert(ss_type, s)
@@ -46,6 +48,9 @@ if has_xray then
 	table.insert(ss_type, s)
 	table.insert(vmess_type, s)
 	table.insert(vless_type, s)
+	if api.compare_versions(xray_version, ">=", "26.1.13") then
+		table.insert(hysteria2_type, s)
+	end
 end
 if has_hysteria2 then
 	local s = "hysteria2"
@@ -59,7 +64,8 @@ for k, e in ipairs(api.get_valid_nodes()) do
 			remark = e["remark"],
 			type = e["type"],
 			add_mode = e["add_mode"],
-			chain_proxy = e["chain_proxy"]
+			chain_proxy = e["chain_proxy"],
+			group = e["group"]
 		}
 	end
 end
@@ -67,10 +73,6 @@ end
 s = m:section(NamedSection, arg[1])
 s.addremove = false
 s.dynamic = false
-
-function m.commit_handler(self)
-	self:del(arg[1], "md5")
-end
 
 o = s:option(Value, "remark", translate("Subscribe Remark"))
 o.rmempty = false
@@ -242,7 +244,7 @@ o.default = "v2rayN/9.99"
 o:value("curl", "Curl")
 o:value("Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36 Edg/122.0.0.0", "Edge for Linux")
 o:value("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36 Edg/122.0.0.0", "Edge for Windows")
-o:value("Passwall2/OpenWrt", "PassWall2")
+o:value("passwall2", "PassWall2")
 o:value("v2rayN/9.99", "v2rayN")
 
 o = s:option(ListValue, "chain_proxy", translate("Chain Proxy"))
@@ -255,18 +257,24 @@ descrStr = descrStr .. "The chained node must be the same type as your subscript
 descrStr = descrStr .. "You can only use manual or imported nodes as chained nodes."
 descrStr = translate(descrStr) .. "<br>" .. translate("Only support a layer of proxy.")
 
-o = s:option(ListValue, "preproxy_node", translate("Preproxy Node"))
-o:depends({ ["chain_proxy"] = "1" })
-o.description = descrStr
+o1 = s:option(ListValue, "preproxy_node", translate("Preproxy Node"))
+o1:depends({ ["chain_proxy"] = "1" })
+o1.description = descrStr
+o1.template = appname .. "/cbi/nodes_listvalue"
+o1.group = {}
 
-o = s:option(ListValue, "to_node", translate("Landing Node"))
-o:depends({ ["chain_proxy"] = "2" })
-o.description = descrStr
+o2 = s:option(ListValue, "to_node", translate("Landing Node"))
+o2:depends({ ["chain_proxy"] = "2" })
+o2.description = descrStr
+o2.template = appname .. "/cbi/nodes_listvalue"
+o2.group = {}
 
 for k, v in pairs(nodes_table) do
 	if (v.type == "Xray" or v.type == "sing-box") and (not v.chain_proxy or v.chain_proxy == "") and v.add_mode ~= "2" then
-		s.fields["preproxy_node"]:value(v.id, v.remark)
-		s.fields["to_node"]:value(v.id, v.remark)
+		o1:value(v.id, v.remark)
+		o1.group[#o1.group+1] = (v.group and v.group ~= "") and v.group or translate("default")
+		o2:value(v.id, v.remark)
+		o2.group[#o2.group+1] = (v.group and v.group ~= "") and v.group or translate("default")
 	end
 end
 
