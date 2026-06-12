@@ -28,7 +28,7 @@ LUCI_PKGARCH:=all
 LUCI_DEPENDS:=+coreutils +coreutils-base64 +coreutils-nohup +curl \
 	+ip-full +libuci-lua +lua +luci-compat +luci-lib-jsonc +lyaml +resolveip +tcping \
 	+geoview +v2ray-geoip +v2ray-geosite \
-	+unzip
+	+unzip +dnsmasq-full +nftables +kmod-nft-socket +kmod-nft-tproxy +kmod-nft-nat
 
 define Package/$(PKG_NAME)/config
 menu "Configuration"
