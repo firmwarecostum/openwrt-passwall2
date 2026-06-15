@@ -27,8 +27,8 @@ LUCI_TITLE:=LuCI support for PassWall 2
 LUCI_PKGARCH:=all
 LUCI_DEPENDS:=+coreutils +coreutils-base64 +coreutils-nohup +curl \
 	+ip-full +libuci-lua +lua +luci-compat +luci-lib-jsonc +lyaml +resolveip +tcping \
-	+geoview +v2ray-geoip +v2ray-geosite +sing-box +xray-core \
-	+unzip +dnsmasq-full +nftables +kmod-nft-socket +kmod-nft-tproxy +kmod-nft-nat
+	+geoview +v2ray-geoip +v2ray-geosite \
+	+unzip +sing-box +xray-core
 
 define Package/$(PKG_NAME)/config
 menu "Configuration"
